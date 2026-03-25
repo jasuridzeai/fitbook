@@ -615,14 +615,8 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscure = true;
 
   void _login() {
-    setState(() {
-      _emailErr = _email.text.trim().isEmpty ? 'Please enter your email'
-          : !_email.text.contains('@') ? 'Invalid email format' : null;
-      _passErr = _pass.text.isEmpty ? 'Please enter your password' : null;
-    });
-    if (_emailErr != null || _passErr != null) return;
-    AppData.userEmail = _email.text.trim();
-    AppData.userName = _email.text.split('@').first;
+    AppData.userEmail = _email.text.trim().isEmpty ? 'user@fitbook.com' : _email.text.trim();
+    AppData.userName = _email.text.trim().isEmpty ? 'User' : _email.text.split('@').first;
     AppData.userRole = 'client';
     Navigator.pushAndRemoveUntil(context,
       MaterialPageRoute(builder: (_) => const ClientShell()), (route) => false);
@@ -709,16 +703,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String? _nameErr, _emailErr, _phoneErr;
 
   void _continue() {
-    setState(() {
-      _nameErr = _name.text.trim().isEmpty ? 'Please enter your name' : null;
-      _emailErr = _email.text.trim().isEmpty ? 'Please enter your email'
-          : !_email.text.contains('@') ? 'Invalid email format' : null;
-      _phoneErr = _phone.text.trim().isEmpty ? 'Please enter your phone number' : null;
-    });
-    if (_nameErr != null || _emailErr != null || _phoneErr != null) return;
-
-    AppData.userName = _name.text.trim();
-    AppData.userEmail = _email.text.trim();
+    AppData.userName = _name.text.trim().isEmpty ? 'User' : _name.text.trim();
+    AppData.userEmail = _email.text.trim().isEmpty ? 'user@fitbook.com' : _email.text.trim();
     AppData.userRole = _role;
 
     Navigator.pushAndRemoveUntil(context,
@@ -1190,7 +1176,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
             Text('\$${t['price']}/h', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: C.accent)),
             const SizedBox(height: 8),
             ScaleTap(
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => BookingScreen(trainer: t))),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TrainerProfileScreen(trainer: t))),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                 decoration: BoxDecoration(gradient: const LinearGradient(colors: [C.accent, C.accentDark]), borderRadius: BorderRadius.circular(10)),
