@@ -377,7 +377,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
                       // Already have account
                       GestureDetector(
-                        onTap: () {},
+                        onTap: () => Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => const CatalogScreen())),
                         child: Container(
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(vertical: 15),
@@ -644,6 +645,67 @@ class _CatalogScreenState extends State<CatalogScreen> {
   final List<String> _filters = ['All', 'Training', 'Yoga', 'Tennis', 'Boxing', 'Swimming'];
   int _selectedFilter = 0;
 
+  List<Map<String, dynamic>> get _filteredTrainers {
+    if (_selectedFilter == 0) return _trainers;
+    final kw = _filters[_selectedFilter].toLowerCase();
+    return _trainers.where((t) =>
+      (t['sport'] as String).toLowerCase().contains(kw)).toList();
+  }
+
+  void _showFilterSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(width: 40, height: 4,
+                decoration: BoxDecoration(color: C.surface,
+                  borderRadius: BorderRadius.circular(2))),
+            ),
+            const SizedBox(height: 20),
+            const Text('Filter Trainers',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: C.text)),
+            const SizedBox(height: 16),
+            const Text('SPORT', style: TextStyle(fontSize: 10, color: C.textMuted,
+              letterSpacing: 1.5, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8, runSpacing: 8,
+              children: List.generate(_filters.length, (i) {
+                final sel = _selectedFilter == i;
+                return GestureDetector(
+                  onTap: () {
+                    setState(() => _selectedFilter = i);
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      gradient: sel ? const LinearGradient(colors: [C.accent, C.accentDark]) : null,
+                      color: sel ? null : C.surface,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(_filters[i], style: TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w600,
+                      color: sel ? Colors.white : C.textSub)),
+                  ),
+                );
+              }),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -683,15 +745,18 @@ class _CatalogScreenState extends State<CatalogScreen> {
                           ),
                         ),
                       ),
-                      Container(
-                        width: 40, height: 40,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                              colors: [C.accent, C.accentDark]),
-                          borderRadius: BorderRadius.circular(12),
+                      GestureDetector(
+                        onTap: () => _showFilterSheet(),
+                        child: Container(
+                          width: 40, height: 40,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                                colors: [C.accent, C.accentDark]),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.tune_rounded,
+                              size: 18, color: Colors.white),
                         ),
-                        child: const Icon(Icons.tune_rounded,
-                            size: 18, color: Colors.white),
                       ),
                     ],
                   ),
@@ -764,9 +829,9 @@ class _CatalogScreenState extends State<CatalogScreen> {
             Expanded(
               child: ListView.separated(
                 padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-                itemCount: _trainers.length,
+                itemCount: _filteredTrainers.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (_, i) => _trainerCard(_trainers[i]),
+                itemBuilder: (_, i) => _trainerCard(_filteredTrainers[i]),
               ),
             ),
           ],
@@ -776,7 +841,10 @@ class _CatalogScreenState extends State<CatalogScreen> {
   }
 
   Widget _trainerCard(Map<String, dynamic> t) {
-    return Container(
+    return GestureDetector(
+      onTap: () => Navigator.push(context,
+        MaterialPageRoute(builder: (_) => TrainerProfileScreen(trainer: t))),
+      child: Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -867,22 +935,738 @@ class _CatalogScreenState extends State<CatalogScreen> {
                       fontSize: 15, fontWeight: FontWeight.w800,
                       color: C.accent)),
               const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 7),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                      colors: [C.accent, C.accentDark]),
-                  borderRadius: BorderRadius.circular(10),
+              GestureDetector(
+                onTap: () => Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => TrainerProfileScreen(trainer: t))),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 7),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                        colors: [C.accent, C.accentDark]),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Text('Book',
+                      style: TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.w700,
+                          color: Colors.white)),
                 ),
-                child: const Text('Book',
-                    style: TextStyle(
-                        fontSize: 12, fontWeight: FontWeight.w700,
-                        color: Colors.white)),
               ),
             ],
           ),
         ],
+      ),
+    ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────
+// TRAINER PROFILE SCREEN
+// ─────────────────────────────────────────
+class TrainerProfileScreen extends StatelessWidget {
+  final Map<String, dynamic> trainer;
+  const TrainerProfileScreen({super.key, required this.trainer});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = trainer['color'] as Color;
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 240,
+            pinned: true,
+            backgroundColor: Colors.white,
+            leading: Padding(
+              padding: const EdgeInsets.all(8),
+              child: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.arrow_back_ios_new_rounded,
+                      size: 16, color: C.text),
+                ),
+              ),
+            ),
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [color.withOpacity(0.2), color.withOpacity(0.4)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 40),
+                    Container(
+                      width: 90, height: 90,
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(28),
+                      ),
+                      child: Icon(Icons.person_rounded, size: 50, color: color),
+                    ),
+                    const SizedBox(height: 12),
+                    if (trainer['tag'] != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(colors: [C.accent, C.accentDark]),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(trainer['tag'],
+                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800,
+                            color: Colors.white, letterSpacing: 1)),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 100),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(trainer['name'],
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: C.text)),
+                  const SizedBox(height: 4),
+                  Text(trainer['sport'],
+                    style: const TextStyle(fontSize: 14, color: C.textSub)),
+                  const SizedBox(height: 20),
+                  // Stats row
+                  Row(
+                    children: [
+                      _statCard(Icons.star_rounded, '${trainer['rating']}', 'Rating'),
+                      const SizedBox(width: 10),
+                      _statCard(Icons.chat_bubble_rounded, '${trainer['reviews']}', 'Reviews'),
+                      const SizedBox(width: 10),
+                      _statCard(Icons.attach_money_rounded, '${trainer['price']}/h', 'Price'),
+                    ],
+                  ),
+                  const SizedBox(height: 28),
+                  const Text('About', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: C.text)),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Certified ${trainer['sport'].toString().toLowerCase()} trainer with ${trainer['reviews']}+ sessions completed. Passionate about helping clients reach their fitness goals through personalized programs and consistent motivation.',
+                    style: const TextStyle(fontSize: 14, color: C.textSub, height: 1.7),
+                  ),
+                  const SizedBox(height: 28),
+                  const Text('Reviews', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: C.text)),
+                  const SizedBox(height: 14),
+                  _reviewCard('Sarah M.', 5, 'Amazing trainer! Helped me reach my goals in just 3 months.'),
+                  const SizedBox(height: 10),
+                  _reviewCard('David K.', 4, 'Very professional and motivating. Highly recommend!'),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 28),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 16, offset: const Offset(0, -4))],
+        ),
+        child: Row(
+          children: [
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Price', style: TextStyle(fontSize: 11, color: C.textMuted)),
+                Text('\$${trainer['price']}/h',
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: C.accent)),
+              ],
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: GestureDetector(
+                onTap: () => Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => BookingScreen(trainer: trainer))),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    gradient: const LinearGradient(colors: [C.accent, C.accentDark]),
+                    boxShadow: [BoxShadow(color: C.accent.withOpacity(0.35),
+                      offset: const Offset(0, 6), blurRadius: 20)],
+                  ),
+                  child: const Center(child: Text('Book Session  →',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white))),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _statCard(IconData icon, String value, String label) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: C.surface,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: 18, color: C.accent),
+            const SizedBox(height: 6),
+            Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: C.text)),
+            const SizedBox(height: 2),
+            Text(label, style: const TextStyle(fontSize: 10, color: C.textMuted)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _reviewCard(String name, int stars, String text) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: C.surface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36, height: 36,
+                decoration: BoxDecoration(
+                  color: C.accent.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Center(child: Text(name[0],
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: C.accent))),
+              ),
+              const SizedBox(width: 10),
+              Text(name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: C.text)),
+              const Spacer(),
+              Row(children: List.generate(5, (i) => Icon(
+                Icons.star_rounded, size: 14,
+                color: i < stars ? C.accent : C.surface,
+              ))),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(text, style: const TextStyle(fontSize: 13, color: C.textSub, height: 1.5)),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────
+// BOOKING SCREEN
+// ─────────────────────────────────────────
+class BookingScreen extends StatefulWidget {
+  final Map<String, dynamic> trainer;
+  const BookingScreen({super.key, required this.trainer});
+
+  @override
+  State<BookingScreen> createState() => _BookingScreenState();
+}
+
+class _BookingScreenState extends State<BookingScreen> {
+  String _type = 'Individual';
+  int _selectedDate = 0;
+  int _selectedTime = -1;
+  final List<String> _times = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
+
+  @override
+  Widget build(BuildContext context) {
+    final t = widget.trainer;
+    final now = DateTime.now();
+    final days = List.generate(7, (i) => now.add(Duration(days: i)));
+    final dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 40, height: 40,
+                      decoration: BoxDecoration(
+                        color: C.surface,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.arrow_back_ios_new_rounded,
+                          size: 16, color: C.textSub),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text('Book Session',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: C.text)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Trainer mini card
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: C.surface,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 44, height: 44,
+                            decoration: BoxDecoration(
+                              color: (t['color'] as Color).withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(Icons.person_rounded, size: 24, color: t['color'] as Color),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(t['name'], style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: C.text)),
+                              Text(t['sport'], style: const TextStyle(fontSize: 12, color: C.textSub)),
+                            ],
+                          )),
+                          Text('\$${t['price']}/h', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: C.accent)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Session type
+                    _label('SESSION TYPE'),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        _typeCard('Individual', Icons.person_rounded),
+                        const SizedBox(width: 12),
+                        _typeCard('Group', Icons.group_rounded),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Date
+                    _label('SELECT DATE'),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 72,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: 7,
+                        separatorBuilder: (_, __) => const SizedBox(width: 10),
+                        itemBuilder: (_, i) {
+                          final sel = _selectedDate == i;
+                          return GestureDetector(
+                            onTap: () => setState(() => _selectedDate = i),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 180),
+                              width: 56,
+                              decoration: BoxDecoration(
+                                gradient: sel ? const LinearGradient(colors: [C.accent, C.accentDark]) : null,
+                                color: sel ? null : C.surface,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(dayNames[(days[i].weekday - 1) % 7],
+                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
+                                      color: sel ? Colors.white70 : C.textMuted)),
+                                  const SizedBox(height: 4),
+                                  Text('${days[i].day}',
+                                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800,
+                                      color: sel ? Colors.white : C.text)),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Time
+                    _label('SELECT TIME'),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 10, runSpacing: 10,
+                      children: List.generate(_times.length, (i) {
+                        final sel = _selectedTime == i;
+                        return GestureDetector(
+                          onTap: () => setState(() => _selectedTime = i),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                            decoration: BoxDecoration(
+                              gradient: sel ? const LinearGradient(colors: [C.accent, C.accentDark]) : null,
+                              color: sel ? null : C.surface,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(_times[i],
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600,
+                                color: sel ? Colors.white : C.textSub)),
+                          ),
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 28),
+
+                    // Summary
+                    if (_selectedTime >= 0)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: C.accentLight,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: C.accent.withOpacity(0.2)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Booking Summary', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: C.text)),
+                            const SizedBox(height: 10),
+                            _summaryRow('Trainer', t['name']),
+                            _summaryRow('Type', _type),
+                            _summaryRow('Date', '${dayNames[(days[_selectedDate].weekday - 1) % 7]}, ${days[_selectedDate].day}/${days[_selectedDate].month}'),
+                            _summaryRow('Time', _times[_selectedTime]),
+                            _summaryRow('Price', '\$${t['price']}'),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 20),
+
+                    // Confirm button
+                    GestureDetector(
+                      onTap: _selectedTime < 0 ? null : () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('Booking confirmed!'),
+                            backgroundColor: C.accent,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        );
+                        Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => ChatScreen(trainer: t)));
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          gradient: LinearGradient(
+                            colors: _selectedTime >= 0
+                              ? [C.accent, C.accentDark]
+                              : [C.textMuted, C.textMuted],
+                          ),
+                          boxShadow: _selectedTime >= 0 ? [BoxShadow(color: C.accent.withOpacity(0.35),
+                            offset: const Offset(0, 6), blurRadius: 20)] : null,
+                        ),
+                        child: const Center(child: Text('Confirm Booking  →',
+                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white))),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _label(String t) => Text(t, style: const TextStyle(
+      fontSize: 10, color: C.textMuted, letterSpacing: 1.5, fontWeight: FontWeight.w700));
+
+  Widget _typeCard(String label, IconData icon) {
+    final sel = _type == label;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _type = label),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: sel ? C.accentLight : C.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: sel ? C.accent : Colors.transparent, width: 1.5),
+          ),
+          child: Column(
+            children: [
+              Container(
+                width: 40, height: 40,
+                decoration: BoxDecoration(
+                  color: sel ? C.accent : const Color(0xFFE0E0E0),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, size: 20, color: sel ? Colors.white : C.textMuted),
+              ),
+              const SizedBox(height: 8),
+              Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700,
+                color: sel ? C.accentDark : C.text)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _summaryRow(String label, String value) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 3),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 12, color: C.textSub)),
+        Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: C.text)),
+      ],
+    ),
+  );
+}
+
+// ─────────────────────────────────────────
+// CHAT SCREEN
+// ─────────────────────────────────────────
+class ChatScreen extends StatefulWidget {
+  final Map<String, dynamic> trainer;
+  const ChatScreen({super.key, required this.trainer});
+
+  @override
+  State<ChatScreen> createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends State<ChatScreen> {
+  final _controller = TextEditingController();
+  late final List<Map<String, dynamic>> _messages;
+
+  @override
+  void initState() {
+    super.initState();
+    _messages = [
+      {'text': 'Hi! Thanks for booking a session with me!', 'isMe': false, 'time': '10:00'},
+      {'text': 'Looking forward to our ${widget.trainer['sport'].toString().toLowerCase()} session!', 'isMe': false, 'time': '10:01'},
+      {'text': 'Booking confirmed! See you soon!', 'isMe': true, 'time': '10:02'},
+    ];
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _send() {
+    final text = _controller.text.trim();
+    if (text.isEmpty) return;
+    final now = TimeOfDay.now();
+    final time = '${now.hour}:${now.minute.toString().padLeft(2, '0')}';
+    setState(() {
+      _messages.add({'text': text, 'isMe': true, 'time': time});
+      _controller.clear();
+    });
+    Future.delayed(const Duration(seconds: 1), () {
+      if (mounted) {
+        final rNow = TimeOfDay.now();
+        setState(() {
+          _messages.add({
+            'text': 'Got it! See you at the session!',
+            'isMe': false,
+            'time': '${rNow.hour}:${rNow.minute.toString().padLeft(2, '0')}',
+          });
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = widget.trainer;
+    final color = t['color'] as Color;
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
+              ),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 40, height: 40,
+                      decoration: BoxDecoration(
+                        color: C.surface,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: C.textSub),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    width: 42, height: 42,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: [color.withOpacity(0.3), color.withOpacity(0.5)]),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(Icons.person_rounded, size: 22, color: color),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(t['name'], style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: C.text)),
+                      Row(children: [
+                        Container(width: 7, height: 7,
+                          decoration: const BoxDecoration(color: Color(0xFF22C55E), shape: BoxShape.circle)),
+                        const SizedBox(width: 5),
+                        const Text('Online', style: TextStyle(fontSize: 11, color: C.textSub)),
+                      ]),
+                    ],
+                  )),
+                  GestureDetector(
+                    onTap: () {},
+                    child: Container(
+                      width: 38, height: 38,
+                      decoration: BoxDecoration(color: C.surface, borderRadius: BorderRadius.circular(12)),
+                      child: const Icon(Icons.phone_rounded, size: 18, color: C.textSub),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () {},
+                    child: Container(
+                      width: 38, height: 38,
+                      decoration: BoxDecoration(color: C.surface, borderRadius: BorderRadius.circular(12)),
+                      child: const Icon(Icons.videocam_rounded, size: 18, color: C.textSub),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Messages
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                itemCount: _messages.length,
+                itemBuilder: (_, i) {
+                  final m = _messages[i];
+                  final isMe = m['isMe'] as bool;
+                  return Align(
+                    alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.72),
+                      decoration: BoxDecoration(
+                        gradient: isMe ? const LinearGradient(colors: [C.accent, C.accentDark]) : null,
+                        color: isMe ? null : C.surface,
+                        borderRadius: BorderRadius.only(
+                          topLeft: const Radius.circular(16),
+                          topRight: const Radius.circular(16),
+                          bottomLeft: Radius.circular(isMe ? 16 : 4),
+                          bottomRight: Radius.circular(isMe ? 4 : 16),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(m['text'], style: TextStyle(fontSize: 14, color: isMe ? Colors.white : C.text, height: 1.4)),
+                          const SizedBox(height: 3),
+                          Text(m['time'], style: TextStyle(fontSize: 10,
+                            color: isMe ? Colors.white54 : C.textMuted)),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            // Input
+            Container(
+              padding: const EdgeInsets.fromLTRB(24, 10, 24, 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, -2))],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: C.surface,
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: TextField(
+                        controller: _controller,
+                        onSubmitted: (_) => _send(),
+                        style: const TextStyle(fontSize: 14, color: C.text),
+                        decoration: const InputDecoration(
+                          hintText: 'Type a message...',
+                          hintStyle: TextStyle(color: C.textMuted),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: _send,
+                    child: Container(
+                      width: 44, height: 44,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(colors: [C.accent, C.accentDark]),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [BoxShadow(color: C.accent.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))],
+                      ),
+                      child: const Icon(Icons.send_rounded, size: 20, color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
