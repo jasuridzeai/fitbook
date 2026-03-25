@@ -165,6 +165,15 @@ class FitBookApp extends StatelessWidget {
           },
         ),
       ),
+      builder: (context, child) => Container(
+        color: const Color(0xFFF0F0F0),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: child,
+          ),
+        ),
+      ),
       home: const OnboardingScreen(),
     );
   }
