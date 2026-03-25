@@ -487,7 +487,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 8),
               _field('example@gmail.com'),
               const SizedBox(height: 24),
-              _gradBtn('Continue', () {}),
+              _gradBtn('Continue', () => Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const CatalogScreen()))),
               const SizedBox(height: 32),
             ],
           ),
@@ -570,4 +571,319 @@ class _RegisterScreenState extends State<RegisterScreen> {
           fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white))),
     ),
   );
+}
+
+// ─────────────────────────────────────────
+// CATALOG SCREEN — список тренеров
+// ─────────────────────────────────────────
+class CatalogScreen extends StatefulWidget {
+  const CatalogScreen({super.key});
+
+  @override
+  State<CatalogScreen> createState() => _CatalogScreenState();
+}
+
+class _CatalogScreenState extends State<CatalogScreen> {
+  final List<Map<String, dynamic>> _trainers = [
+    {
+      'name': 'Alex Morrison',
+      'sport': 'Personal Training',
+      'rating': 4.9,
+      'reviews': 128,
+      'price': 60,
+      'tag': 'TOP',
+      'color': C.accent,
+    },
+    {
+      'name': 'Sofia Chen',
+      'sport': 'Yoga & Pilates',
+      'rating': 4.8,
+      'reviews': 94,
+      'price': 45,
+      'tag': 'NEW',
+      'color': Color(0xFF7C3AED),
+    },
+    {
+      'name': 'Marcus Hill',
+      'sport': 'Basketball',
+      'rating': 4.7,
+      'reviews': 76,
+      'price': 55,
+      'tag': null,
+      'color': Color(0xFF0EA5E9),
+    },
+    {
+      'name': 'Elena Voss',
+      'sport': 'Tennis',
+      'rating': 5.0,
+      'reviews': 210,
+      'price': 75,
+      'tag': 'TOP',
+      'color': C.accent,
+    },
+    {
+      'name': 'James Park',
+      'sport': 'Boxing',
+      'rating': 4.6,
+      'reviews': 53,
+      'price': 50,
+      'tag': null,
+      'color': Color(0xFFDC2626),
+    },
+    {
+      'name': 'Nina Russo',
+      'sport': 'Swimming',
+      'rating': 4.8,
+      'reviews': 87,
+      'price': 65,
+      'tag': 'NEW',
+      'color': Color(0xFF0891B2),
+    },
+  ];
+
+  final List<String> _filters = ['All', 'Training', 'Yoga', 'Tennis', 'Boxing', 'Swimming'];
+  int _selectedFilter = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF7F7F7),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── HEADER ──
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 40, height: 40,
+                          decoration: BoxDecoration(
+                            color: C.surface,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.arrow_back_ios_new_rounded,
+                              size: 16, color: C.textSub),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'Find a Trainer',
+                          style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.w800,
+                            color: C.text,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        width: 40, height: 40,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                              colors: [C.accent, C.accentDark]),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.tune_rounded,
+                            size: 18, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Search bar
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: C.surface,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.search_rounded, color: C.textMuted, size: 20),
+                        const SizedBox(width: 10),
+                        Text('Search trainers...',
+                            style: TextStyle(
+                                fontSize: 14,
+                                color: C.textMuted.withOpacity(0.8))),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  // Filter chips
+                  SizedBox(
+                    height: 34,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _filters.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (_, i) {
+                        final sel = _selectedFilter == i;
+                        return GestureDetector(
+                          onTap: () => setState(() => _selectedFilter = i),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 6),
+                            decoration: BoxDecoration(
+                              gradient: sel
+                                  ? const LinearGradient(
+                                      colors: [C.accent, C.accentDark])
+                                  : null,
+                              color: sel ? null : Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: sel ? Colors.transparent : C.surface,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Text(
+                              _filters[i],
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: sel ? Colors.white : C.textSub,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+
+            // ── TRAINER LIST ──
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+                itemCount: _trainers.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (_, i) => _trainerCard(_trainers[i]),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _trainerCard(Map<String, dynamic> t) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Avatar
+          Container(
+            width: 60, height: 60,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [(t['color'] as Color).withOpacity(0.15),
+                         (t['color'] as Color).withOpacity(0.3)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(Icons.person_rounded,
+                size: 30, color: t['color'] as Color),
+          ),
+          const SizedBox(width: 14),
+          // Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(t['name'],
+                        style: const TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.w700,
+                            color: C.text)),
+                    if (t['tag'] != null) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                              colors: [C.accent, C.accentDark]),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(t['tag'],
+                            style: const TextStyle(
+                                fontSize: 9, fontWeight: FontWeight.w800,
+                                color: Colors.white, letterSpacing: 1)),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(t['sport'],
+                    style: const TextStyle(fontSize: 12, color: C.textSub)),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Icon(Icons.star_rounded,
+                        size: 14, color: C.accent),
+                    const SizedBox(width: 3),
+                    Text('${t['rating']}',
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w700,
+                            color: C.text)),
+                    const SizedBox(width: 4),
+                    Text('(${t['reviews']} reviews)',
+                        style: const TextStyle(
+                            fontSize: 11, color: C.textMuted)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          // Price + Book
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text('\$${t['price']}/h',
+                  style: const TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w800,
+                      color: C.accent)),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 7),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                      colors: [C.accent, C.accentDark]),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Text('Book',
+                    style: TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.w700,
+                        color: Colors.white)),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
