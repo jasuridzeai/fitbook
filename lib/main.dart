@@ -1340,21 +1340,39 @@ class TrainerProfileScreen extends StatelessWidget {
           ),
         ],
       ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.fromLTRB(24, 12, 24, 28),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 16, offset: const Offset(0, -4))],
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 16, offset: const Offset(0, -4))],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('Price', style: TextStyle(fontSize: 11, color: C.textMuted)),
+                Text('\$${trainer['price']}/h', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: C.accent)),
+              ]),
+              const SizedBox(width: 20),
+              Expanded(
+                child: ScaleTap(
+                  onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => BookingScreen(trainer: trainer))),
+                  child: Container(
+                    height: 52,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: const LinearGradient(colors: [C.accent, C.accentDark]),
+                      boxShadow: [BoxShadow(color: C.accent.withOpacity(0.35), offset: const Offset(0, 6), blurRadius: 20)],
+                    ),
+                    child: const Center(child: Text('Book Session  →', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white))),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-        child: Row(children: [
-          Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Price', style: TextStyle(fontSize: 11, color: C.textMuted)),
-            Text('\$${trainer['price']}/h', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: C.accent)),
-          ]),
-          const SizedBox(width: 20),
-          Expanded(child: gradBtn('Book Session  →', () => Navigator.push(context,
-            MaterialPageRoute(builder: (_) => BookingScreen(trainer: trainer))))),
-        ]),
       ),
     );
   }
