@@ -489,7 +489,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               _field('example@gmail.com'),
               const SizedBox(height: 24),
               _gradBtn('Continue', () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const CatalogScreen()))),
+                  MaterialPageRoute(builder: (_) => _role == 'trainer'
+                    ? const TrainerDashboardScreen()
+                    : const CatalogScreen()))),
               const SizedBox(height: 32),
             ],
           ),
@@ -572,6 +574,290 @@ class _RegisterScreenState extends State<RegisterScreen> {
           fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white))),
     ),
   );
+}
+
+// ─────────────────────────────────────────
+// TRAINER DASHBOARD — расписание тренера
+// ─────────────────────────────────────────
+class TrainerDashboardScreen extends StatefulWidget {
+  const TrainerDashboardScreen({super.key});
+
+  @override
+  State<TrainerDashboardScreen> createState() => _TrainerDashboardScreenState();
+}
+
+class _TrainerDashboardScreenState extends State<TrainerDashboardScreen> {
+  int _tab = 0;
+
+  final List<Map<String, dynamic>> _bookings = [
+    {
+      'client': 'Sarah Mitchell',
+      'type': 'Individual',
+      'date': 'Today',
+      'time': '09:00 – 10:00',
+      'status': 'confirmed',
+      'color': C.accent,
+    },
+    {
+      'client': 'David Kim',
+      'type': 'Group',
+      'date': 'Today',
+      'time': '14:00 – 15:00',
+      'status': 'confirmed',
+      'color': const Color(0xFF7C3AED),
+    },
+    {
+      'client': 'Anna Lopez',
+      'type': 'Individual',
+      'date': 'Tomorrow',
+      'time': '10:00 – 11:00',
+      'status': 'pending',
+      'color': const Color(0xFF0EA5E9),
+    },
+    {
+      'client': 'Mark Johnson',
+      'type': 'Individual',
+      'date': 'Tomorrow',
+      'time': '16:00 – 17:00',
+      'status': 'confirmed',
+      'color': const Color(0xFF0891B2),
+    },
+    {
+      'client': 'Emily Chen',
+      'type': 'Group',
+      'date': 'Mar 28',
+      'time': '11:00 – 12:00',
+      'status': 'pending',
+      'color': const Color(0xFFDC2626),
+    },
+  ];
+
+  List<Map<String, dynamic>> get _filtered {
+    if (_tab == 0) return _bookings;
+    if (_tab == 1) return _bookings.where((b) => b['status'] == 'confirmed').toList();
+    return _bookings.where((b) => b['status'] == 'pending').toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final confirmed = _bookings.where((b) => b['status'] == 'confirmed').length;
+    final pending = _bookings.where((b) => b['status'] == 'pending').length;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF7F7F7),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 40, height: 40,
+                          decoration: BoxDecoration(
+                            color: C.surface,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.arrow_back_ios_new_rounded,
+                              size: 16, color: C.textSub),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text('My Schedule',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: C.text)),
+                      ),
+                      Container(
+                        width: 40, height: 40,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(colors: [C.accent, C.accentDark]),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.notifications_rounded, size: 18, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Stats row
+                  Row(
+                    children: [
+                      _statPill(Icons.check_circle_rounded, '$confirmed Confirmed', C.accent),
+                      const SizedBox(width: 10),
+                      _statPill(Icons.schedule_rounded, '$pending Pending', const Color(0xFFEAB308)),
+                      const SizedBox(width: 10),
+                      _statPill(Icons.people_rounded, '${_bookings.length} Total', C.textSub),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Tabs
+                  SizedBox(
+                    height: 34,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: [
+                        _tabChip('All', 0),
+                        const SizedBox(width: 8),
+                        _tabChip('Confirmed', 1),
+                        const SizedBox(width: 8),
+                        _tabChip('Pending', 2),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+            // Bookings list
+            Expanded(
+              child: _filtered.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.calendar_today_rounded, size: 48, color: C.textMuted),
+                        const SizedBox(height: 12),
+                        const Text('No bookings yet',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: C.textSub)),
+                      ],
+                    ),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+                    itemCount: _filtered.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (_, i) => _bookingCard(_filtered[i]),
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _statPill(IconData icon, String label, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 14, color: color),
+            const SizedBox(width: 5),
+            Flexible(child: Text(label,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color))),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _tabChip(String label, int index) {
+    final sel = _tab == index;
+    return GestureDetector(
+      onTap: () => setState(() => _tab = index),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(
+          gradient: sel ? const LinearGradient(colors: [C.accent, C.accentDark]) : null,
+          color: sel ? null : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: sel ? Colors.transparent : C.surface, width: 1.5),
+        ),
+        child: Text(label,
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600,
+            color: sel ? Colors.white : C.textSub)),
+      ),
+    );
+  }
+
+  Widget _bookingCard(Map<String, dynamic> b) {
+    final confirmed = b['status'] == 'confirmed';
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4))],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 50, height: 50,
+            decoration: BoxDecoration(
+              color: (b['color'] as Color).withOpacity(0.15),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(Icons.person_rounded, size: 26, color: b['color'] as Color),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(b['client'], style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: C.text)),
+                const SizedBox(height: 3),
+                Text('${b['type']} · ${b['date']}', style: const TextStyle(fontSize: 12, color: C.textSub)),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(Icons.access_time_rounded, size: 13, color: C.textMuted),
+                    const SizedBox(width: 4),
+                    Text(b['time'], style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: C.text)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: confirmed ? C.accent.withOpacity(0.1) : const Color(0xFFFEF3C7),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  confirmed ? 'Confirmed' : 'Pending',
+                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700,
+                    color: confirmed ? C.accent : const Color(0xFFD97706)),
+                ),
+              ),
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: () => Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => ChatScreen(trainer: {
+                    'name': b['client'], 'sport': 'Session', 'color': b['color'],
+                  }))),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [C.accent, C.accentDark]),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Text('Chat', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ─────────────────────────────────────────
