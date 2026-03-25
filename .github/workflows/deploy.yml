@@ -1,0 +1,34 @@
+name: Deploy Flutter Web
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.5'
+      - run: flutter pub get
+      - run: flutter build web --release --base-href /fitbook/
+      - uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web
+```
+
+Сохрани файл (Ctrl+S) потом в терминале:
+```
+git add .
+git commit -m "add github actions"
+git push
+```
+
+Потом зайди на github.com/jasuridzeai/fitbook → Settings → Pages → Source → выбери `gh-pages` branch.
+
+Через 2-3 минуты приложение будет на:
+```
+https://jasuridzeai.github.io/fitbook
